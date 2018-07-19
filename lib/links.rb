@@ -6,15 +6,16 @@ class Links
   end
 
   def run
-    ary = Parser.new(@url).run
+    links = Parser.new(@url).run
 
-    ary.each do |a|
-        response = HTTParty.get(a)
-        if(response.code == 200)
-            puts response.code.to_s.green + "\t" + a
-        else
-            puts response.code.to_s.red + "\t" + a
-        end
+    links.each do |l|
+      response = HTTParty.get(l)
+
+      if (response.code == 200)
+        puts response.code.to_s.green + "\t" + l
+      else
+        puts response.code.to_s.red + "\t" + l
+      end
     end
   end
 end
