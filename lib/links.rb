@@ -12,8 +12,7 @@ class Links
   def run
     links = parser.run
     
-    responses = Enumerator.new do |enum| 
-
+    responses = Enumerator.new do |enum|
       links.each do |l|
         response = HTTParty.get(l)
 

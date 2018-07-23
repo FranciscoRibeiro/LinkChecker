@@ -12,26 +12,19 @@ class Parser
                 track: ['src'] }
 
   attr_reader :url
-  #attr_accessor :doc
 
   def initialize(url)
     @url = url
   end
 
   def run
-    all_links = []
+    @@elements
+      .flat_map { |elem, attr_list| attr_list.flat_map { |attr| extract_links(get_elems(elem), attr) } }
+      .uniq
+  end
+
+  def doc
     @doc ||= get_html
-
-    @@elements.each do |elem, attr_list|
-      elems = get_elems(elem)
-
-      attr_list.each do |attr|
-        links = extract_links(elems, attr)
-        all_links = (all_links << links).flatten
-      end
-    end
-
-    all_links.uniq
   end
 
   def get_html
@@ -39,7 +32,7 @@ class Parser
   end
 
   def get_elems(elem)
-    @doc.css(elem)
+    doc.css(elem)
   end
 
   def extract_links(elems, attr)
