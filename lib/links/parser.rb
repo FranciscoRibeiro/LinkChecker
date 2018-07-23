@@ -2,24 +2,27 @@ require 'httparty'
 
 class Parser
 
-  def initialize(url)
-    @elements = { a: ['href'],
-                  img: ['src'],
-                  script: ['src'],
-                  frame: ['src'],
-                  iframe: ['src'],
-                  link: ['href'],
-                  source: ['src', 'srcset'],
-                  track: ['src'] }
+  @@elements = { a: ['href'],
+                img: ['src'],
+                script: ['src'],
+                frame: ['src'],
+                iframe: ['src'],
+                link: ['href'],
+                source: ['src', 'srcset'],
+                track: ['src'] }
 
+  attr_reader :url
+  #attr_accessor :doc
+
+  def initialize(url)
     @url = url
   end
 
   def run
     all_links = []
-    @doc = Nokogiri::HTML(HTTParty.get(@url))
+    @doc ||= get_html
 
-    @elements.each do |elem, attr_list|
+    @@elements.each do |elem, attr_list|
       elems = get_elems(elem)
 
       attr_list.each do |attr|
@@ -29,6 +32,10 @@ class Parser
     end
 
     all_links.uniq
+  end
+
+  def get_html
+    Nokogiri::HTML(HTTParty.get(url))
   end
 
   def get_elems(elem)
@@ -42,7 +49,7 @@ class Parser
                            .partition { |link| is_relative?(link) }
 
     relatives
-      .map { |rel_link| URI.join(@url, rel_link).to_s }
+      .map { |rel_link| URI.join(url, rel_link).to_s }
       .append(absolutes)
       .flatten
       .select { |link| is_valid?(link) }
@@ -53,7 +60,6 @@ class Parser
   end
 
   def is_valid?(link)
-    # p link
     link =~ /\A#{URI::regexp}\z/
   end
 end
