@@ -1,25 +1,20 @@
-require_relative 'links/parser'
+require "links/parser"
 
 class Links
-
   attr_reader :url, :parser
 
-  def initialize(url)
+  def initialize(url, parser=nil)
     @url = url
-    @parser = Parser.new(url)
+    @parser = parser || Parser.new(url)
   end
 
   def run
     links = parser.run
-    
-    responses = Enumerator.new do |enum|
-      links.each do |l|
-        response = HTTParty.get(l)
 
-        enum << {code: response.code, link: l}
-      end
+    links.lazy.map do |l|
+      response = HTTParty.get(l)
+
+      { code: response.code, link: l }
     end
-
-    responses
   end
 end

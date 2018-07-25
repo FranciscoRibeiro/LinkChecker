@@ -1,15 +1,15 @@
-require 'httparty'
+require "httparty"
+require "links/link_verifier"
 
 class Parser
-
-  @@elements = { a: ['href'],
-                img: ['src'],
-                script: ['src'],
-                frame: ['src'],
-                iframe: ['src'],
-                link: ['href'],
-                source: ['src', 'srcset'],
-                track: ['src'] }
+  ELEMENTS = { a: ["href"],
+               img: ["src"],
+               script: ["src"],
+               frame: ["src"],
+               iframe: ["src"],
+               link: ["href"],
+               source: %w[src srcset],
+               track: ["src"] }.freeze
 
   attr_reader :url
 
@@ -18,10 +18,16 @@ class Parser
   end
 
   def run
-    @@elements
-      .flat_map { |elem, attr_list| attr_list.flat_map { |attr| extract_links(get_elems(elem), attr) } }
+    ELEMENTS
+      .flat_map do |elem, attr_list|
+        attr_list.flat_map do |attr|
+          extract_links(get_elems(elem), attr)
+        end
+      end
       .uniq
   end
+
+  private
 
   def doc
     @doc ||= get_html
@@ -36,23 +42,19 @@ class Parser
   end
 
   def extract_links(elems, attr)
-    relatives, absolutes = elems
-                           .map { |e| e[attr] }
-                           .compact
-                           .partition { |link| is_relative?(link) }
+    relatives, absolutes = split_links(elems, attr)
 
     relatives
       .map { |rel_link| URI.join(url, rel_link).to_s }
       .append(absolutes)
       .flatten
-      .select { |link| is_valid?(link) }
+      .select { |link| LinkVerifier.is_valid?(link) }
   end
 
-  def is_relative?(link)
-    !link.start_with?('http')
-  end
-
-  def is_valid?(link)
-    link =~ /\A#{URI::regexp}\z/
+  def split_links(elems, attr)
+    elems
+      .map { |e| e[attr] }
+      .compact
+      .partition { |link| LinkVerifier.is_relative?(link) }
   end
 end

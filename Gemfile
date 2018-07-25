@@ -1,5 +1,5 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
-gem 'httparty'
-gem 'nokogiri'
-gem 'colorize'
+gem "colorize"
+gem "httparty"
+gem "nokogiri"
